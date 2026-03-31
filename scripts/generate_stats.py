@@ -228,10 +228,6 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
                 facecolor=TIER_COLOR.get(t_name_g, "#888"),
                 edgecolor="none", zorder=2,
             ))
-            if bw > 0.08:
-                ax_i.text(bx + bw / 2, by + bh / 2,
-                          t_name_g[0], ha="center", va="center",
-                          fontsize=6.5, color="white", fontweight="bold", zorder=3)
             bx += bw
 
     plt.savefig(ASSETS_DIR / "profile_card.svg",
@@ -250,10 +246,10 @@ def generate_lang_legend(lang_counts: dict):
     n_rows = max(1, (n + ITEMS_PER_ROW - 1) // ITEMS_PER_ROW)
 
     fig_w  = 9.0
-    fig_h  = n_rows * 0.62
+    fig_h  = n_rows * 0.38
 
     # Bar: physical height H, width H/3  →  1:3 vertical ratio
-    bar_h_in = 0.26
+    bar_h_in = 0.22
     bar_h    = bar_h_in / fig_h        # data units (ylim 0–1)
     bar_w    = (bar_h_in / 3.0) / fig_w  # data units (xlim 0–1)
 
@@ -275,7 +271,7 @@ def generate_lang_legend(lang_counts: dict):
         lang_color = LANG_COLOR.get(lang, LANG_COLOR["Other"])
 
         # Thin vertical colored bar
-        bx = cx - 0.10
+        bx = cx - 0.07
         ax.add_patch(plt.Rectangle(
             (bx, cy - bar_h / 2), bar_w, bar_h,
             color=lang_color, zorder=5, linewidth=0,
@@ -311,19 +307,19 @@ def generate_rating_graph(history: list, user_data: dict):
 
     # ── Right info panel ──
     latest = history[-1] if history else user_data
-    ax_r.text(0.05, 0.92, "Rating", fontsize=8, color=C_MUTED)
+    ax_r.text(0.05, 0.92, "Rating", fontsize=9.6, color=C_MUTED)
     ax_r.text(0.05, 0.78, str(latest.get("rating", user_data["rating"])),
-              fontsize=19, fontweight="bold", color=C_ACCENT)
-    ax_r.text(0.05, 0.62, "Rank", fontsize=8, color=C_MUTED)
+              fontsize=22.8, fontweight="bold", color=C_ACCENT)
+    ax_r.text(0.05, 0.62, "Rank", fontsize=9.6, color=C_MUTED)
     ax_r.text(0.05, 0.49, f"#{latest.get('rank', user_data['rank']):,}",
-              fontsize=10, fontweight="bold", color=C_ACCENT)
+              fontsize=12, fontweight="bold", color=C_ACCENT)
 
     if len(history) >= 2:
         prev  = history[-2]
         delta = latest["rating"] - prev["rating"]
         dc = "#4CAF50" if delta > 0 else "#EF5350" if delta < 0 else C_MUTED
         ds = f"▲ +{delta}" if delta > 0 else f"▼ {delta}" if delta < 0 else "─ 0"
-        ax_r.text(0.05, 0.36, ds, fontsize=8, color=dc, fontweight="bold")
+        ax_r.text(0.05, 0.36, ds, fontsize=9.6, color=dc, fontweight="bold")
 
     # ── Line graph ──
     if len(history) >= 2:
@@ -349,9 +345,9 @@ def generate_rating_graph(history: list, user_data: dict):
                    edgecolors="white", linewidths=0.8)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
-        ax.tick_params(axis="x", colors=C_MUTED, labelsize=7, rotation=30)
-        ax.tick_params(axis="y", colors=C_MUTED, labelsize=7)
-        ax.set_ylabel("Rating", fontsize=7.5, color=C_MUTED, labelpad=4)
+        ax.tick_params(axis="x", colors=C_MUTED, labelsize=8.4, rotation=30)
+        ax.tick_params(axis="y", colors=C_MUTED, labelsize=8.4)
+        ax.set_ylabel("Rating", fontsize=9, color=C_MUTED, labelpad=4)
         ax.grid(True, color=C_GRID, linewidth=0.6, linestyle="--", alpha=0.7)
 
         for spine in ("top", "right"):
@@ -363,15 +359,15 @@ def generate_rating_graph(history: list, user_data: dict):
             str(ratings[-1]),
             xy=(dates[-1], ratings[-1]),
             xytext=(6, 6), textcoords="offset points",
-            fontsize=7.5, color=C_ACCENT, fontweight="bold",
+            fontsize=9, color=C_ACCENT, fontweight="bold",
         )
     else:
         ax.axis("off")
         ax.text(0.5, 0.5, "Collecting data...\nCheck back soon!",
                 ha="center", va="center", transform=ax.transAxes,
-                fontsize=10, color=C_MUTED, linespacing=1.8)
+                fontsize=12, color=C_MUTED, linespacing=1.8)
 
-    ax.set_title("Rating History", fontsize=10, color=C_ACCENT,
+    ax.set_title("Rating History", fontsize=12, color=C_ACCENT,
                  pad=8, fontweight="bold", loc="left")
 
     plt.savefig(ASSETS_DIR / "rating_graph.svg",

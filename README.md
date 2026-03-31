@@ -9,7 +9,3 @@
   <br><br>
   <img src="assets/rating_graph.svg" width="90%" alt="Rating History">
 </div>
-
-<br>
-
-> 통계는 풀이가 push될 때마다 자동으로 업데이트됩니다.
