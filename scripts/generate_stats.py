@@ -13,6 +13,7 @@ import matplotlib.dates as mdates
 from matplotlib.patches import FancyBboxPatch
 import numpy as np
 import requests
+from scipy.interpolate import make_interp_spline
 
 # Use Menlo; fall back gracefully on systems that don't have it
 plt.rcParams.update({
@@ -252,9 +253,9 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
 # ── Card 2: Rating history graph ────────────────────────────────────────────
 def generate_rating_graph(history: list, user_data: dict):
-    fig = plt.figure(figsize=(9, 3.2), facecolor="none")
-    ax   = fig.add_axes([0.08, 0.18, 0.68, 0.68])
-    ax_r = fig.add_axes([0.79, 0.05, 0.20, 0.90])
+    fig = plt.figure(figsize=(11, 3.2), facecolor="none")
+    ax   = fig.add_axes([0.06, 0.18, 0.72, 0.68])
+    ax_r = fig.add_axes([0.81, 0.05, 0.18, 0.90])
 
     for a in (ax, ax_r):
         a.set_facecolor("none")
@@ -284,9 +285,19 @@ def generate_rating_graph(history: list, user_data: dict):
         dates   = [datetime.strptime(h["date"], "%Y-%m-%d") for h in history]
         ratings = [h["rating"] for h in history]
 
-        ax.plot(dates, ratings, color=C_ACCENT, linewidth=2.2, zorder=5, solid_capstyle="round")
-        ax.fill_between(dates, ratings, min(ratings) - 5,
-                        alpha=0.12, color=C_ACCENT, zorder=3)
+        date_nums = mdates.date2num(dates)
+        if len(dates) >= 4:
+            spl      = make_interp_spline(date_nums, ratings, k=3)
+            x_smooth = np.linspace(date_nums[0], date_nums[-1], 300)
+            y_smooth = spl(x_smooth)
+            ax.plot(mdates.num2date(x_smooth), y_smooth,
+                    color=C_ACCENT, linewidth=2.2, zorder=5, solid_capstyle="round")
+            ax.fill_between(mdates.num2date(x_smooth), y_smooth, min(ratings) - 5,
+                            alpha=0.12, color=C_ACCENT, zorder=3)
+        else:
+            ax.plot(dates, ratings, color=C_ACCENT, linewidth=2.2, zorder=5, solid_capstyle="round")
+            ax.fill_between(dates, ratings, min(ratings) - 5,
+                            alpha=0.12, color=C_ACCENT, zorder=3)
         ax.scatter(dates, ratings, color=C_ACCENT, s=35, zorder=6,
                    edgecolors="white", linewidths=0.8)
 
