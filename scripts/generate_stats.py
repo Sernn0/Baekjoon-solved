@@ -17,7 +17,7 @@ import requests
 # Use Menlo; fall back gracefully on systems that don't have it
 plt.rcParams.update({
     "font.family":    "monospace",
-    "font.monospace": ["Menlo", "Courier New", "DejaVu Sans Mono"],
+    "font.monospace": ["JetBrains Mono", "Menlo", "Courier New", "DejaVu Sans Mono"],
 })
 
 # ── Paths ──────────────────────────────────────────────────────────────────
