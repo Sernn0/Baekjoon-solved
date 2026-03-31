@@ -158,7 +158,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
     # ── Donut chart ──
     ax_d.set_xlim(-1.6, 1.6)
-    ax_d.set_ylim(-1.3, 1.5)
+    ax_d.set_ylim(-2.2, 1.3)
     ax_d.set_aspect("equal")
 
     langs   = sorted(lang_counts.items(), key=lambda x: -x[1])
@@ -174,23 +174,25 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
         radius=1.0,
     )
 
-    ax_d.text(0, 0.10, str(total_f), ha="center", va="center",
-              fontsize=17, fontweight="bold", color=C_TEXT, zorder=5)
-    ax_d.text(0, -0.22, "files", ha="center", va="center",
-              fontsize=8, color=C_MUTED, zorder=5)
-
-    # Legend below donut
-    col_x = [-1.50, -0.15]
+    # ── Language legend (below donut) ──
     for idx, (lang, count) in enumerate(langs):
-        col = col_x[idx % 2]
-        row = idx // 2
-        ly  = 1.42 - row * 0.32
-        ax_d.add_patch(plt.Circle((col, ly), 0.08,
-                                  color=LANG_COLOR.get(lang, LANG_COLOR["Other"]),
-                                  zorder=5))
+        ly  = -1.20 - idx * 0.38
         pct = count / total_f * 100
-        ax_d.text(col + 0.14, ly, f"{lang} {pct:.0f}%",
-                  ha="left", va="center", fontsize=7.5, color=C_TEXT, zorder=5)
+        sq  = 0.20
+        # Colored square
+        ax_d.add_patch(plt.Rectangle(
+            (-1.40, ly - sq / 2), sq, sq,
+            color=LANG_COLOR.get(lang, LANG_COLOR["Other"]),
+            zorder=5, linewidth=0,
+        ))
+        # Language name
+        ax_d.text(-1.12, ly + 0.03, lang,
+                  ha="left", va="center", fontsize=9, fontweight="bold",
+                  color=C_TEXT, zorder=5)
+        # Percentage
+        ax_d.text(-1.12, ly - 0.13, f"{pct:.1f}%",
+                  ha="left", va="center", fontsize=7.5,
+                  color=C_MUTED, zorder=5)
 
     # ── Info panel ──
     ax_i.set_xlim(0, 1)
