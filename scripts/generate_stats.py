@@ -14,6 +14,12 @@ from matplotlib.patches import FancyBboxPatch
 import numpy as np
 import requests
 
+# Use Menlo; fall back gracefully on systems that don't have it
+plt.rcParams.update({
+    "font.family":    "monospace",
+    "font.monospace": ["Menlo", "Courier New", "DejaVu Sans Mono"],
+})
+
 # ── Paths ──────────────────────────────────────────────────────────────────
 HANDLE = "sernn"
 REPO_ROOT = Path(__file__).parent.parent
@@ -67,11 +73,11 @@ LANG_COLOR = {
 # ── Colour palette (light lavender) ────────────────────────────────────────
 C_CARD    = "#F7F3FD"   # card background
 C_BORDER  = "#C8A8E9"   # lavender border
-C_TEXT    = "#2D2540"   # primary text
-C_MUTED   = "#7B6B8A"   # secondary text
-C_ACCENT  = "#9B72CF"   # vivid purple
-C_LIGHT   = "#E8DCF5"   # light lavender
-C_GRID    = "#DDD0ED"   # grid lines
+C_TEXT    = "#3D2F55"   # primary text (dark purple, readable on light card)
+C_MUTED   = "#7055A0"   # secondary text (medium purple, clearly visible)
+C_ACCENT  = "#8B5CF6"   # vivid purple accent
+C_LIGHT   = "#D8C8EF"   # light lavender (separators / fills)
+C_GRID    = "#E2D5F5"   # grid lines
 
 TIER_GROUP_BOUNDS = {
     "Bronze":   (1, 5),
@@ -137,21 +143,27 @@ def update_history(user_data: dict) -> list:
     return history
 
 # ── Drawing helpers ─────────────────────────────────────────────────────────
-def _card_bg(ax, x=0.0, y=0.0, w=1.0, h=1.0, radius=0.05):
-    ax.add_patch(FancyBboxPatch(
-        (x, y), w, h,
-        boxstyle=f"round,pad=0,rounding_size={radius}",
-        transform=ax.transData,
+def _add_card_bg(fig):
+    """Draw a rounded card background on the entire figure."""
+    ax_bg = fig.add_axes([0.0, 0.0, 1.0, 1.0], zorder=-1)
+    ax_bg.set_facecolor("none")
+    ax_bg.axis("off")
+    ax_bg.set_xlim(0, 1)
+    ax_bg.set_ylim(0, 1)
+    ax_bg.add_patch(FancyBboxPatch(
+        (0.008, 0.015), 0.984, 0.97,
+        boxstyle="round,pad=0,rounding_size=0.04",
+        transform=ax_bg.transData,
         facecolor=C_CARD,
         edgecolor=C_BORDER,
         linewidth=1.5,
         clip_on=False,
-        zorder=0,
     ))
 
 # ── Card 1: Profile + Language donut + Difficulty bar ──────────────────────
 def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: list):
     fig = plt.figure(figsize=(9, 3.2), facecolor="none")
+    _add_card_bg(fig)
 
     # axes: donut on left, info on right
     ax_d = fig.add_axes([0.02, 0.05, 0.40, 0.90])   # donut
@@ -267,6 +279,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 # ── Card 2: Rating history graph ────────────────────────────────────────────
 def generate_rating_graph(history: list, user_data: dict):
     fig = plt.figure(figsize=(9, 3.2), facecolor="none")
+    _add_card_bg(fig)
     ax   = fig.add_axes([0.08, 0.18, 0.68, 0.68])
     ax_r = fig.add_axes([0.79, 0.05, 0.20, 0.90])
 
@@ -284,7 +297,7 @@ def generate_rating_graph(history: list, user_data: dict):
               fontsize=19, fontweight="bold", color=C_ACCENT)
     ax_r.text(0.05, 0.62, "Rank", fontsize=8, color=C_MUTED)
     ax_r.text(0.05, 0.49, f"#{latest.get('rank', user_data['rank']):,}",
-              fontsize=10, fontweight="bold", color=C_TEXT)
+              fontsize=10, fontweight="bold", color=C_ACCENT)
 
     if len(history) >= 2:
         prev = history[-2]
@@ -328,7 +341,7 @@ def generate_rating_graph(history: list, user_data: dict):
                 ha="center", va="center", transform=ax.transAxes,
                 fontsize=10, color=C_MUTED, linespacing=1.8)
 
-    ax.set_title("Rating History", fontsize=10, color=C_TEXT,
+    ax.set_title("Rating History", fontsize=10, color=C_ACCENT,
                  pad=8, fontweight="bold", loc="left")
 
     plt.savefig(ASSETS_DIR / "rating_graph.svg",
