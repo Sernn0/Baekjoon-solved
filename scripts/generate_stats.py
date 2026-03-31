@@ -180,14 +180,6 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
         (0, 0), 0.57, fill=False,
         edgecolor=C_BORDER, linewidth=0.9, zorder=6, alpha=0.45,
     ))
-    # Aesthetic: subtle inner highlight dots on wedge tips
-    for i, (wedge, (lang, _)) in enumerate(zip(wedges, langs)):
-        mid_angle = np.radians((wedge.theta1 + wedge.theta2) / 2)
-        dot_r = 1.005
-        ax_d.add_patch(plt.Circle(
-            (dot_r * np.cos(mid_angle), dot_r * np.sin(mid_angle)),
-            0.025, color="white", zorder=7, alpha=0.7,
-        ))
 
     # ── Info panel ───────────────────────────────────────────────────────────
     ax_i.set_xlim(0, 1)
@@ -227,10 +219,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
     if active:
         total_s = sum(v for _, v in active)
-        # Label + decorative line
         ax_i.text(0.04, 0.125, "Difficulty", fontsize=7, color=C_MUTED, va="center")
-        ax_i.plot([0.33, 0.96], [0.125, 0.125],
-                  color=C_LIGHT, linewidth=0.7, alpha=0.9)
 
         bx, by, bh = 0.04, 0.028, 0.072
 
@@ -320,7 +309,7 @@ def generate_lang_legend(lang_counts: dict):
 
 # ── Card 3: Rating history graph ─────────────────────────────────────────────
 def generate_rating_graph(history: list, user_data: dict):
-    fig  = plt.figure(figsize=(13.2, 3.2), facecolor="none")
+    fig  = plt.figure(figsize=(13.2, 4.5), facecolor="none")
     ax   = fig.add_axes([0.06, 0.18, 0.72, 0.68])
     ax_r = fig.add_axes([0.81, 0.05, 0.18, 0.90])
 
