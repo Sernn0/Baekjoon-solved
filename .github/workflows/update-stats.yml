@@ -1,0 +1,44 @@
+name: Update Baekjoon Stats
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '백준/**'
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install matplotlib requests
+      
+      - name: Generate statistics
+        run: |
+          cd ${{ github.workspace }}
+          python statistics/generate_stats.py
+      
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add statistics/
+            git commit -m "chore: update baekjoon statistics [skip ci]"
+            git push
+          fi
