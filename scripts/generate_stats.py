@@ -1,0 +1,364 @@
+#!/usr/bin/env python3
+"""Generate Baekjoon/solved.ac stats SVGs for README."""
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.dates as mdates
+from matplotlib.patches import FancyBboxPatch
+import numpy as np
+import requests
+
+# ── Paths ──────────────────────────────────────────────────────────────────
+HANDLE = "sernn"
+REPO_ROOT = Path(__file__).parent.parent
+DATA_FILE = REPO_ROOT / "data" / "rating_history.json"
+ASSETS_DIR = REPO_ROOT / "assets"
+BAEKJOON_DIR = REPO_ROOT / "백준"
+
+ASSETS_DIR.mkdir(exist_ok=True)
+
+# ── solved.ac tier metadata ─────────────────────────────────────────────────
+_TIER_NAMES = (
+    ["Unrated"]
+    + [f"{t} {r}" for t in ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ruby"]
+       for r in ["V", "IV", "III", "II", "I"]]
+)
+TIER_COLOR = {
+    "Unrated":  "#888888",
+    "Bronze":   "#AD5600",
+    "Silver":   "#435F7A",
+    "Gold":     "#EC9A00",
+    "Platinum": "#27E2A4",
+    "Diamond":  "#00B4FC",
+    "Ruby":     "#FF0062",
+}
+
+def tier_name(tier: int) -> str:
+    return _TIER_NAMES[tier] if 0 <= tier < len(_TIER_NAMES) else "Unknown"
+
+def tier_color(tier: int) -> str:
+    name = tier_name(tier)
+    for key in TIER_COLOR:
+        if name.startswith(key):
+            return TIER_COLOR[key]
+    return "#888888"
+
+# ── Language metadata ───────────────────────────────────────────────────────
+EXT_TO_LANG = {
+    "cs": "C#", "py": "Python", "c": "C",
+    "cpp": "C++", "java": "Java", "js": "JavaScript",
+}
+LANG_COLOR = {
+    "C#":         "#9B4F96",
+    "Python":     "#3572A5",
+    "C":          "#6E6E6E",
+    "C++":        "#F34B7D",
+    "Java":       "#B07219",
+    "JavaScript": "#F1E05A",
+    "Other":      "#8A8A8A",
+}
+
+# ── Colour palette (light lavender) ────────────────────────────────────────
+C_CARD    = "#F7F3FD"   # card background
+C_BORDER  = "#C8A8E9"   # lavender border
+C_TEXT    = "#2D2540"   # primary text
+C_MUTED   = "#7B6B8A"   # secondary text
+C_ACCENT  = "#9B72CF"   # vivid purple
+C_LIGHT   = "#E8DCF5"   # light lavender
+C_GRID    = "#DDD0ED"   # grid lines
+
+TIER_GROUP_BOUNDS = {
+    "Bronze":   (1, 5),
+    "Silver":   (6, 10),
+    "Gold":     (11, 15),
+    "Platinum": (16, 20),
+    "Diamond":  (21, 25),
+    "Ruby":     (26, 30),
+}
+
+# ── API helpers ─────────────────────────────────────────────────────────────
+def fetch_user_data() -> dict:
+    r = requests.get(
+        f"https://solved.ac/api/v3/user/show?handle={HANDLE}",
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+    )
+    r.raise_for_status()
+    return r.json()
+
+def fetch_problem_stats() -> list:
+    r = requests.get(
+        f"https://solved.ac/api/v3/user/problem_stats?handle={HANDLE}",
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+    )
+    r.raise_for_status()
+    return r.json()
+
+# ── Data helpers ────────────────────────────────────────────────────────────
+def get_language_counts() -> dict:
+    counts: dict[str, int] = {}
+    for path in BAEKJOON_DIR.rglob("*"):
+        if path.is_file():
+            ext = path.suffix.lstrip(".").lower()
+            if ext in EXT_TO_LANG:
+                lang = EXT_TO_LANG[ext]
+                counts[lang] = counts.get(lang, 0) + 1
+    return counts
+
+def group_by_tier(problem_stats: list) -> dict:
+    groups: dict[str, int] = {}
+    for stat in problem_stats:
+        lvl = stat["level"]
+        for name, (lo, hi) in TIER_GROUP_BOUNDS.items():
+            if lo <= lvl <= hi:
+                groups[name] = groups.get(name, 0) + stat["solved"]
+    return groups
+
+def update_history(user_data: dict) -> list:
+    DATA_FILE.parent.mkdir(exist_ok=True)
+    history: list = json.loads(DATA_FILE.read_text()) if DATA_FILE.exists() else []
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    history = [h for h in history if h["date"] != today]
+    history.append({
+        "date":   today,
+        "rating": user_data["rating"],
+        "rank":   user_data["rank"],
+        "solved": user_data["solvedCount"],
+    })
+    history.sort(key=lambda x: x["date"])
+    DATA_FILE.write_text(json.dumps(history, indent=2))
+    return history
+
+# ── Drawing helpers ─────────────────────────────────────────────────────────
+def _card_bg(ax, x=0.0, y=0.0, w=1.0, h=1.0, radius=0.05):
+    ax.add_patch(FancyBboxPatch(
+        (x, y), w, h,
+        boxstyle=f"round,pad=0,rounding_size={radius}",
+        transform=ax.transData,
+        facecolor=C_CARD,
+        edgecolor=C_BORDER,
+        linewidth=1.5,
+        clip_on=False,
+        zorder=0,
+    ))
+
+# ── Card 1: Profile + Language donut + Difficulty bar ──────────────────────
+def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: list):
+    fig = plt.figure(figsize=(9, 3.2), facecolor="none")
+
+    # axes: donut on left, info on right
+    ax_d = fig.add_axes([0.02, 0.05, 0.40, 0.90])   # donut
+    ax_i = fig.add_axes([0.42, 0.05, 0.56, 0.90])   # info
+
+    for ax in (ax_d, ax_i):
+        ax.set_facecolor("none")
+        ax.axis("off")
+
+    # ── Donut chart ──
+    ax_d.set_xlim(-1.6, 1.6)
+    ax_d.set_ylim(-1.3, 1.5)
+    ax_d.set_aspect("equal")
+
+    langs   = sorted(lang_counts.items(), key=lambda x: -x[1])
+    sizes   = [s for _, s in langs]
+    colors  = [LANG_COLOR.get(l, LANG_COLOR["Other"]) for l, _ in langs]
+    total_f = sum(sizes)
+
+    wedges, _ = ax_d.pie(
+        sizes,
+        colors=colors,
+        startangle=90,
+        wedgeprops=dict(width=0.42, edgecolor="white", linewidth=1.5),
+        radius=1.0,
+    )
+
+    ax_d.text(0, 0.10, str(total_f), ha="center", va="center",
+              fontsize=17, fontweight="bold", color=C_TEXT, zorder=5)
+    ax_d.text(0, -0.22, "files", ha="center", va="center",
+              fontsize=8, color=C_MUTED, zorder=5)
+
+    # Legend below donut
+    col_x = [-1.50, -0.15]
+    for idx, (lang, count) in enumerate(langs):
+        col = col_x[idx % 2]
+        row = idx // 2
+        ly  = 1.42 - row * 0.32
+        ax_d.add_patch(plt.Circle((col, ly), 0.08,
+                                  color=LANG_COLOR.get(lang, LANG_COLOR["Other"]),
+                                  zorder=5))
+        pct = count / total_f * 100
+        ax_d.text(col + 0.14, ly, f"{lang} {pct:.0f}%",
+                  ha="left", va="center", fontsize=7.5, color=C_TEXT, zorder=5)
+
+    # ── Info panel ──
+    ax_i.set_xlim(0, 1)
+    ax_i.set_ylim(0, 1)
+
+    # Handle
+    ax_i.text(0.04, 0.90, HANDLE,
+              fontsize=15, fontweight="bold", color=C_TEXT, va="center")
+
+    # Tier badge
+    t_color = tier_color(user_data["tier"])
+    t_name  = tier_name(user_data["tier"])
+    badge   = FancyBboxPatch(
+        (0.04, 0.73), 0.38, 0.12,
+        boxstyle="round,pad=0.02",
+        facecolor=t_color + "22",
+        edgecolor=t_color,
+        linewidth=1.5,
+    )
+    ax_i.add_patch(badge)
+    ax_i.text(0.23, 0.79, t_name, ha="center", va="center",
+              fontsize=9, fontweight="bold", color=t_color)
+
+    # Stats
+    rows = [
+        ("Rating",  f"{user_data['rating']:,}"),
+        ("Rank",    f"#{user_data['rank']:,}"),
+        ("Solved",  f"{user_data['solvedCount']}"),
+    ]
+    for i, (label, value) in enumerate(rows):
+        y = 0.58 - i * 0.155
+        ax_i.text(0.04, y, label, fontsize=8, color=C_MUTED, va="center")
+        ax_i.text(0.96, y, value, fontsize=10.5, fontweight="bold",
+                  color=C_TEXT, va="center", ha="right")
+        if i < len(rows) - 1:
+            ax_i.plot([0.04, 0.96], [y - 0.075, y - 0.075],
+                      color=C_LIGHT, linewidth=0.8)
+
+    # Difficulty stacked bar
+    tier_groups = group_by_tier(problem_stats)
+    active = [(t, tier_groups[t])
+              for t in ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ruby"]
+              if tier_groups.get(t, 0) > 0]
+
+    if active:
+        total_s = sum(v for _, v in active)
+        ax_i.text(0.04, 0.115, "Difficulty", fontsize=7, color=C_MUTED, va="center")
+        bx, by, bh = 0.04, 0.03, 0.065
+        for t_name_g, count in active:
+            bw = (count / total_s) * 0.92
+            ax_i.add_patch(FancyBboxPatch(
+                (bx, by), bw, bh,
+                boxstyle="square,pad=0",
+                facecolor=TIER_COLOR.get(t_name_g, "#888"),
+                edgecolor="none",
+            ))
+            if bw > 0.07:
+                ax_i.text(bx + bw / 2, by + bh / 2,
+                          t_name_g[0], ha="center", va="center",
+                          fontsize=6.5, color="white", fontweight="bold")
+            bx += bw
+
+    plt.savefig(ASSETS_DIR / "profile_card.svg",
+                format="svg", bbox_inches="tight", transparent=True)
+    plt.close()
+    print("  ✓ profile_card.svg")
+
+
+# ── Card 2: Rating history graph ────────────────────────────────────────────
+def generate_rating_graph(history: list, user_data: dict):
+    fig = plt.figure(figsize=(9, 3.2), facecolor="none")
+    ax   = fig.add_axes([0.08, 0.18, 0.68, 0.68])
+    ax_r = fig.add_axes([0.79, 0.05, 0.20, 0.90])
+
+    for a in (ax, ax_r):
+        a.set_facecolor("none")
+
+    ax_r.axis("off")
+    ax_r.set_xlim(0, 1)
+    ax_r.set_ylim(0, 1)
+
+    # ── Right info panel ──
+    latest = history[-1] if history else user_data
+    ax_r.text(0.05, 0.92, "Rating",  fontsize=8,  color=C_MUTED)
+    ax_r.text(0.05, 0.78, str(latest.get("rating", user_data["rating"])),
+              fontsize=19, fontweight="bold", color=C_ACCENT)
+    ax_r.text(0.05, 0.62, "Rank", fontsize=8, color=C_MUTED)
+    ax_r.text(0.05, 0.49, f"#{latest.get('rank', user_data['rank']):,}",
+              fontsize=10, fontweight="bold", color=C_TEXT)
+
+    if len(history) >= 2:
+        prev = history[-2]
+        delta = latest["rating"] - prev["rating"]
+        dc = "#4CAF50" if delta > 0 else "#EF5350" if delta < 0 else C_MUTED
+        ds = f"▲ +{delta}" if delta > 0 else f"▼ {delta}" if delta < 0 else "─ 0"
+        ax_r.text(0.05, 0.36, ds, fontsize=8, color=dc, fontweight="bold")
+
+    # ── Line graph ──
+    if len(history) >= 2:
+        dates   = [datetime.strptime(h["date"], "%Y-%m-%d") for h in history]
+        ratings = [h["rating"] for h in history]
+
+        ax.plot(dates, ratings, color=C_ACCENT, linewidth=2.2, zorder=5, solid_capstyle="round")
+        ax.fill_between(dates, ratings, min(ratings) - 5,
+                        alpha=0.12, color=C_ACCENT, zorder=3)
+        ax.scatter(dates, ratings, color=C_ACCENT, s=35, zorder=6,
+                   edgecolors="white", linewidths=0.8)
+
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+        ax.tick_params(axis="x", colors=C_MUTED, labelsize=7, rotation=30)
+        ax.tick_params(axis="y", colors=C_MUTED, labelsize=7)
+        ax.set_ylabel("Rating", fontsize=7.5, color=C_MUTED, labelpad=4)
+        ax.grid(True, color=C_GRID, linewidth=0.6, linestyle="--", alpha=0.7)
+
+        for spine in ("top", "right"):
+            ax.spines[spine].set_visible(False)
+        for spine in ("bottom", "left"):
+            ax.spines[spine].set_color(C_LIGHT)
+
+        # Annotate latest point
+        ax.annotate(
+            str(ratings[-1]),
+            xy=(dates[-1], ratings[-1]),
+            xytext=(6, 6), textcoords="offset points",
+            fontsize=7.5, color=C_ACCENT, fontweight="bold",
+        )
+    else:
+        ax.axis("off")
+        ax.text(0.5, 0.5, "Collecting data...\nCheck back soon!",
+                ha="center", va="center", transform=ax.transAxes,
+                fontsize=10, color=C_MUTED, linespacing=1.8)
+
+    ax.set_title("Rating History", fontsize=10, color=C_TEXT,
+                 pad=8, fontweight="bold", loc="left")
+
+    plt.savefig(ASSETS_DIR / "rating_graph.svg",
+                format="svg", bbox_inches="tight", transparent=True)
+    plt.close()
+    print("  ✓ rating_graph.svg")
+
+
+# ── Main ────────────────────────────────────────────────────────────────────
+def main():
+    print("Fetching solved.ac data...")
+    user_data     = fetch_user_data()
+    problem_stats = fetch_problem_stats()
+
+    print("Counting languages from repo...")
+    lang_counts = get_language_counts()
+
+    print("Updating rating history...")
+    history = update_history(user_data)
+
+    print("Generating SVGs...")
+    generate_profile_card(user_data, lang_counts, problem_stats)
+    generate_rating_graph(history, user_data)
+
+    print(f"\nDone — {user_data['handle']} · "
+          f"{tier_name(user_data['tier'])} · "
+          f"Rating {user_data['rating']} · "
+          f"#{user_data['rank']:,} · "
+          f"{user_data['solvedCount']} solved")
+
+
+if __name__ == "__main__":
+    main()
