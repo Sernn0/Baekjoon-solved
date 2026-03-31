@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="662.4pt" height="59.04pt" viewBox="0 0 662.4 59.04" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="662.4pt" height="41.76pt" viewBox="0 0 662.4 41.76" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-03-31T18:00:07.219657</dc:date>
+    <dc:date>2026-03-31T18:07:55.695051</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -21,26 +21,26 @@
  </defs>
  <g id="figure_1">
   <g id="patch_1">
-   <path d="M 0 59.04 
-L 662.4 59.04 
+   <path d="M 0 41.76 
+L 662.4 41.76 
 L 662.4 0 
 L 0 0 
-L 0 59.04 
+L 0 41.76 
 z
 " style="fill: none"/>
   </g>
   <g id="axes_1">
    <g id="patch_2">
-    <path d="M 23.4 38.88 
-L 29.64 38.88 
-L 29.64 20.16 
-L 23.4 20.16 
+    <path d="M 42.84 28.8 
+L 48.12 28.8 
+L 48.12 12.96 
+L 42.84 12.96 
 z
-" clip-path="url(#p4e9e57bc1e)" style="fill: #9b4f96"/>
+" clip-path="url(#p54c22d8375)" style="fill: #9b4f96"/>
    </g>
    <g id="text_1">
     <!-- C# -->
-    <g style="fill: #6b5a8a" transform="translate(42.6 28.0141) scale(0.095 -0.095)">
+    <g style="fill: #6b5a8a" transform="translate(61.08 20.0077) scale(0.095 -0.095)">
      <defs>
       <path id="JetBrainsMono-Bold-43" d="M 1971 -64 
 Q 1517 -64 1184 105 
@@ -113,7 +113,7 @@ z
    </g>
    <g id="text_2">
     <!-- 93.0% -->
-    <g style="fill: #9b8bb8" transform="translate(42.6 35.7009) scale(0.075 -0.075)">
+    <g style="fill: #9b8bb8" transform="translate(61.08 26.4273) scale(0.075 -0.075)">
      <defs>
       <path id="JetBrainsMono-Regular-39" d="M 1248 0 
 L 2400 2003 
@@ -282,16 +282,16 @@ z
     </g>
    </g>
    <g id="patch_3">
-    <path d="M 185.4 38.88 
-L 191.64 38.88 
-L 191.64 20.16 
-L 185.4 20.16 
+    <path d="M 204.84 28.8 
+L 210.12 28.8 
+L 210.12 12.96 
+L 204.84 12.96 
 z
-" clip-path="url(#p4e9e57bc1e)" style="fill: #3572a5"/>
+" clip-path="url(#p54c22d8375)" style="fill: #3572a5"/>
    </g>
    <g id="text_3">
     <!-- Python -->
-    <g style="fill: #6b5a8a" transform="translate(204.6 28.0141) scale(0.095 -0.095)">
+    <g style="fill: #6b5a8a" transform="translate(223.08 20.0077) scale(0.095 -0.095)">
      <defs>
       <path id="JetBrainsMono-Bold-50" d="M 493 0 
 L 493 4672 
@@ -427,7 +427,7 @@ z
    </g>
    <g id="text_4">
     <!-- 4.7% -->
-    <g style="fill: #9b8bb8" transform="translate(204.6 35.7009) scale(0.075 -0.075)">
+    <g style="fill: #9b8bb8" transform="translate(223.08 26.4273) scale(0.075 -0.075)">
      <defs>
       <path id="JetBrainsMono-Regular-34" d="M 2560 0 
 L 2560 1024 
@@ -464,22 +464,22 @@ z
     </g>
    </g>
    <g id="patch_4">
-    <path d="M 347.4 38.88 
-L 353.64 38.88 
-L 353.64 20.16 
-L 347.4 20.16 
+    <path d="M 366.84 28.8 
+L 372.12 28.8 
+L 372.12 12.96 
+L 366.84 12.96 
 z
-" clip-path="url(#p4e9e57bc1e)" style="fill: #6e6e6e"/>
+" clip-path="url(#p54c22d8375)" style="fill: #6e6e6e"/>
    </g>
    <g id="text_5">
     <!-- C -->
-    <g style="fill: #6b5a8a" transform="translate(366.6 28.0141) scale(0.095 -0.095)">
+    <g style="fill: #6b5a8a" transform="translate(385.08 20.0077) scale(0.095 -0.095)">
      <use xlink:href="#JetBrainsMono-Bold-43"/>
     </g>
    </g>
    <g id="text_6">
     <!-- 2.3% -->
-    <g style="fill: #9b8bb8" transform="translate(366.6 35.7009) scale(0.075 -0.075)">
+    <g style="fill: #9b8bb8" transform="translate(385.08 26.4273) scale(0.075 -0.075)">
      <defs>
       <path id="JetBrainsMono-Regular-32" d="M 550 0 
 L 550 531 
@@ -513,8 +513,8 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="p4e9e57bc1e">
-   <rect x="7.2" y="7.2" width="648" height="44.64"/>
+  <clipPath id="p54c22d8375">
+   <rect x="7.2" y="7.2" width="648" height="27.36"/>
   </clipPath>
  </defs>
 </svg>
