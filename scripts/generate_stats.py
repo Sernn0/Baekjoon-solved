@@ -170,17 +170,6 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
     ax_d.set_xlim(-1.22, 1.22)
     ax_d.set_ylim(-1.22, 1.22)
 
-    # Aesthetic: thin outer ring
-    ax_d.add_patch(plt.Circle(
-        (0, 0), 1.07, fill=False,
-        edgecolor=C_BORDER, linewidth=1.2, zorder=4, alpha=0.55,
-    ))
-    # Aesthetic: thin inner ring
-    ax_d.add_patch(plt.Circle(
-        (0, 0), 0.57, fill=False,
-        edgecolor=C_BORDER, linewidth=0.9, zorder=6, alpha=0.45,
-    ))
-
     # ── Info panel ───────────────────────────────────────────────────────────
     ax_i.set_xlim(0, 1)
     ax_i.set_ylim(0, 1)
@@ -219,7 +208,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
     if active:
         total_s = sum(v for _, v in active)
-        ax_i.text(0.04, 0.125, "Difficulty", fontsize=7, color=C_MUTED, va="center")
+        ax_i.text(0.04, 0.120, "Difficulty", fontsize=7, color=C_MUTED, va="center")
 
         bx, by, bh = 0.04, 0.028, 0.072
 
@@ -261,10 +250,10 @@ def generate_lang_legend(lang_counts: dict):
     n_rows = max(1, (n + ITEMS_PER_ROW - 1) // ITEMS_PER_ROW)
 
     fig_w  = 9.0
-    fig_h  = n_rows * 0.88
+    fig_h  = n_rows * 0.62
 
     # Bar: physical height H, width H/3  →  1:3 vertical ratio
-    bar_h_in = 0.34
+    bar_h_in = 0.26
     bar_h    = bar_h_in / fig_h        # data units (ylim 0–1)
     bar_w    = (bar_h_in / 3.0) / fig_w  # data units (xlim 0–1)
 
@@ -309,7 +298,7 @@ def generate_lang_legend(lang_counts: dict):
 
 # ── Card 3: Rating history graph ─────────────────────────────────────────────
 def generate_rating_graph(history: list, user_data: dict):
-    fig  = plt.figure(figsize=(13.2, 4.5), facecolor="none")
+    fig  = plt.figure(figsize=(17.0, 5.5), facecolor="none")
     ax   = fig.add_axes([0.06, 0.18, 0.72, 0.68])
     ax_r = fig.add_axes([0.81, 0.05, 0.18, 0.90])
 
