@@ -73,8 +73,8 @@ LANG_COLOR = {
 # ── Colour palette (light lavender) ────────────────────────────────────────
 C_CARD    = "#F7F3FD"   # card background
 C_BORDER  = "#C8A8E9"   # lavender border
-C_TEXT    = "#3D2F55"   # primary text (dark purple, readable on light card)
-C_MUTED   = "#7055A0"   # secondary text (medium purple, clearly visible)
+C_TEXT    = "#6B5A8A"   # primary text
+C_MUTED   = "#9B8BB8"   # secondary text
 C_ACCENT  = "#8B5CF6"   # vivid purple accent
 C_LIGHT   = "#D8C8EF"   # light lavender (separators / fills)
 C_GRID    = "#E2D5F5"   # grid lines
@@ -142,28 +142,10 @@ def update_history(user_data: dict) -> list:
     DATA_FILE.write_text(json.dumps(history, indent=2))
     return history
 
-# ── Drawing helpers ─────────────────────────────────────────────────────────
-def _add_card_bg(fig):
-    """Draw a rounded card background on the entire figure."""
-    ax_bg = fig.add_axes([0.0, 0.0, 1.0, 1.0], zorder=-1)
-    ax_bg.set_facecolor("none")
-    ax_bg.axis("off")
-    ax_bg.set_xlim(0, 1)
-    ax_bg.set_ylim(0, 1)
-    ax_bg.add_patch(FancyBboxPatch(
-        (0.008, 0.015), 0.984, 0.97,
-        boxstyle="round,pad=0,rounding_size=0.04",
-        transform=ax_bg.transData,
-        facecolor=C_CARD,
-        edgecolor=C_BORDER,
-        linewidth=1.5,
-        clip_on=False,
-    ))
 
 # ── Card 1: Profile + Language donut + Difficulty bar ──────────────────────
 def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: list):
     fig = plt.figure(figsize=(9, 3.2), facecolor="none")
-    _add_card_bg(fig)
 
     # axes: donut on left, info on right
     ax_d = fig.add_axes([0.02, 0.05, 0.40, 0.90])   # donut
@@ -217,19 +199,11 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
     ax_i.text(0.04, 0.90, HANDLE,
               fontsize=15, fontweight="bold", color=C_TEXT, va="center")
 
-    # Tier badge
+    # Tier (plain text, left-aligned, smaller than handle)
     t_color = tier_color(user_data["tier"])
     t_name  = tier_name(user_data["tier"])
-    badge   = FancyBboxPatch(
-        (0.04, 0.73), 0.38, 0.12,
-        boxstyle="round,pad=0.02",
-        facecolor=t_color + "22",
-        edgecolor=t_color,
-        linewidth=1.5,
-    )
-    ax_i.add_patch(badge)
-    ax_i.text(0.23, 0.79, t_name, ha="center", va="center",
-              fontsize=9, fontweight="bold", color=t_color)
+    ax_i.text(0.04, 0.76, t_name,
+              fontsize=11, fontweight="bold", color=t_color, va="center")
 
     # Stats
     rows = [
@@ -279,7 +253,6 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 # ── Card 2: Rating history graph ────────────────────────────────────────────
 def generate_rating_graph(history: list, user_data: dict):
     fig = plt.figure(figsize=(9, 3.2), facecolor="none")
-    _add_card_bg(fig)
     ax   = fig.add_axes([0.08, 0.18, 0.68, 0.68])
     ax_r = fig.add_axes([0.79, 0.05, 0.20, 0.90])
 
