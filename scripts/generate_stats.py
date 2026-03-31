@@ -157,10 +157,6 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
         ax.axis("off")
 
     # ── Donut chart ──
-    ax_d.set_xlim(-1.6, 1.6)
-    ax_d.set_ylim(-2.2, 1.3)
-    ax_d.set_aspect("equal")
-
     langs   = sorted(lang_counts.items(), key=lambda x: -x[1])
     sizes   = [s for _, s in langs]
     colors  = [LANG_COLOR.get(l, LANG_COLOR["Other"]) for l, _ in langs]
@@ -173,6 +169,9 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
         wedgeprops=dict(width=0.42, edgecolor="white", linewidth=1.5),
         radius=1.0,
     )
+    # Set limits AFTER pie() to prevent it from resetting them
+    ax_d.set_xlim(-1.6, 1.6)
+    ax_d.set_ylim(-2.2, 1.3)
 
     # ── Language legend (below donut) ──
     for idx, (lang, count) in enumerate(langs):
