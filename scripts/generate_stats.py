@@ -15,7 +15,6 @@ import numpy as np
 import requests
 from scipy.interpolate import make_interp_spline
 
-# Use Menlo; fall back gracefully on systems that don't have it
 plt.rcParams.update({
     "font.family":    "monospace",
     "font.monospace": ["JetBrains Mono", "Menlo", "Courier New", "DejaVu Sans Mono"],
@@ -71,14 +70,14 @@ LANG_COLOR = {
     "Other":      "#8A8A8A",
 }
 
-# ── Colour palette (light lavender) ────────────────────────────────────────
-C_CARD    = "#F7F3FD"   # card background
-C_BORDER  = "#C8A8E9"   # lavender border
-C_TEXT    = "#6B5A8A"   # primary text
-C_MUTED   = "#9B8BB8"   # secondary text
-C_ACCENT  = "#8B5CF6"   # vivid purple accent
-C_LIGHT   = "#D8C8EF"   # light lavender (separators / fills)
-C_GRID    = "#E2D5F5"   # grid lines
+# ── Colour palette ──────────────────────────────────────────────────────────
+C_CARD    = "#F7F3FD"
+C_BORDER  = "#C8A8E9"
+C_TEXT    = "#6B5A8A"
+C_MUTED   = "#9B8BB8"
+C_ACCENT  = "#8B5CF6"
+C_LIGHT   = "#D8C8EF"
+C_GRID    = "#E2D5F5"
 
 TIER_GROUP_BOUNDS = {
     "Bronze":   (1, 5),
@@ -144,74 +143,72 @@ def update_history(user_data: dict) -> list:
     return history
 
 
-# ── Card 1: Profile + Language donut + Difficulty bar ──────────────────────
+# ── Card 1: Profile (donut + stats + difficulty) ────────────────────────────
 def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: list):
     fig = plt.figure(figsize=(9, 3.2), facecolor="none")
 
-    # axes: donut on left, info on right
-    ax_d = fig.add_axes([0.02, 0.05, 0.40, 0.90])   # donut
-    ax_i = fig.add_axes([0.42, 0.05, 0.56, 0.90])   # info
+    ax_d = fig.add_axes([0.01, 0.03, 0.44, 0.94])   # donut (filled)
+    ax_i = fig.add_axes([0.46, 0.05, 0.52, 0.90])   # info
 
     for ax in (ax_d, ax_i):
         ax.set_facecolor("none")
         ax.axis("off")
 
-    # ── Donut chart ──
-    langs   = sorted(lang_counts.items(), key=lambda x: -x[1])
-    sizes   = [s for _, s in langs]
-    colors  = [LANG_COLOR.get(l, LANG_COLOR["Other"]) for l, _ in langs]
-    total_f = sum(sizes)
+    # ── Donut chart ──────────────────────────────────────────────────────────
+    langs  = sorted(lang_counts.items(), key=lambda x: -x[1])
+    sizes  = [s for _, s in langs]
+    colors = [LANG_COLOR.get(l, LANG_COLOR["Other"]) for l, _ in langs]
 
     wedges, _ = ax_d.pie(
         sizes,
         colors=colors,
         startangle=90,
-        wedgeprops=dict(width=0.42, edgecolor="white", linewidth=1.5),
+        wedgeprops=dict(width=0.44, edgecolor="white", linewidth=0.8),
         radius=1.0,
     )
-    # Set limits AFTER pie() to prevent it from resetting them
-    ax_d.set_xlim(-1.6, 1.6)
-    ax_d.set_ylim(-2.2, 1.3)
+    # Set limits AFTER pie() so they aren't overridden
+    ax_d.set_xlim(-1.22, 1.22)
+    ax_d.set_ylim(-1.22, 1.22)
 
-    # ── Language legend (below donut) ──
-    for idx, (lang, count) in enumerate(langs):
-        ly  = -1.20 - idx * 0.38
-        pct = count / total_f * 100
-        sq  = 0.20
-        # Colored square
-        ax_d.add_patch(plt.Rectangle(
-            (-1.40, ly - sq / 2), sq, sq,
-            color=LANG_COLOR.get(lang, LANG_COLOR["Other"]),
-            zorder=5, linewidth=0,
+    # Aesthetic: thin outer ring
+    ax_d.add_patch(plt.Circle(
+        (0, 0), 1.07, fill=False,
+        edgecolor=C_BORDER, linewidth=1.2, zorder=4, alpha=0.55,
+    ))
+    # Aesthetic: thin inner ring
+    ax_d.add_patch(plt.Circle(
+        (0, 0), 0.57, fill=False,
+        edgecolor=C_BORDER, linewidth=0.9, zorder=6, alpha=0.45,
+    ))
+    # Aesthetic: subtle inner highlight dots on wedge tips
+    for i, (wedge, (lang, _)) in enumerate(zip(wedges, langs)):
+        mid_angle = np.radians((wedge.theta1 + wedge.theta2) / 2)
+        dot_r = 1.005
+        ax_d.add_patch(plt.Circle(
+            (dot_r * np.cos(mid_angle), dot_r * np.sin(mid_angle)),
+            0.025, color="white", zorder=7, alpha=0.7,
         ))
-        # Language name
-        ax_d.text(-1.12, ly + 0.03, lang,
-                  ha="left", va="center", fontsize=9, fontweight="bold",
-                  color=C_TEXT, zorder=5)
-        # Percentage
-        ax_d.text(-1.12, ly - 0.13, f"{pct:.1f}%",
-                  ha="left", va="center", fontsize=7.5,
-                  color=C_MUTED, zorder=5)
 
-    # ── Info panel ──
+    # ── Info panel ───────────────────────────────────────────────────────────
     ax_i.set_xlim(0, 1)
     ax_i.set_ylim(0, 1)
 
-    # Handle
+    # Handle (bigger)
     ax_i.text(0.04, 0.90, HANDLE,
-              fontsize=15, fontweight="bold", color=C_TEXT, va="center")
+              fontsize=18, fontweight="bold", color=C_TEXT, va="center")
 
-    # Tier (plain text, left-aligned, smaller than handle)
+    # Tier (right-aligned)
     t_color = tier_color(user_data["tier"])
     t_name  = tier_name(user_data["tier"])
-    ax_i.text(0.04, 0.76, t_name,
-              fontsize=11, fontweight="bold", color=t_color, va="center")
+    ax_i.text(0.96, 0.76, t_name,
+              fontsize=11, fontweight="bold", color=t_color,
+              va="center", ha="right")
 
-    # Stats
+    # Stats rows
     rows = [
-        ("Rating",  f"{user_data['rating']:,}"),
-        ("Rank",    f"#{user_data['rank']:,}"),
-        ("Solved",  f"{user_data['solvedCount']}"),
+        ("Rating", f"{user_data['rating']:,}"),
+        ("Rank",   f"#{user_data['rank']:,}"),
+        ("Solved", f"{user_data['solvedCount']}"),
     ]
     for i, (label, value) in enumerate(rows):
         y = 0.58 - i * 0.155
@@ -222,7 +219,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
             ax_i.plot([0.04, 0.96], [y - 0.075, y - 0.075],
                       color=C_LIGHT, linewidth=0.8)
 
-    # Difficulty stacked bar
+    # ── Difficulty stacked bar ────────────────────────────────────────────────
     tier_groups = group_by_tier(problem_stats)
     active = [(t, tier_groups[t])
               for t in ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ruby"]
@@ -230,20 +227,33 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
     if active:
         total_s = sum(v for _, v in active)
-        ax_i.text(0.04, 0.115, "Difficulty", fontsize=7, color=C_MUTED, va="center")
-        bx, by, bh = 0.04, 0.03, 0.065
+        # Label + decorative line
+        ax_i.text(0.04, 0.125, "Difficulty", fontsize=7, color=C_MUTED, va="center")
+        ax_i.plot([0.33, 0.96], [0.125, 0.125],
+                  color=C_LIGHT, linewidth=0.7, alpha=0.9)
+
+        bx, by, bh = 0.04, 0.028, 0.072
+
+        # Background track
+        ax_i.add_patch(FancyBboxPatch(
+            (bx - 0.002, by - 0.004), 0.926, bh + 0.008,
+            boxstyle="round,pad=0,rounding_size=0.013",
+            facecolor=C_LIGHT, edgecolor="none", alpha=0.40, zorder=1,
+        ))
+
         for t_name_g, count in active:
             bw = (count / total_s) * 0.92
+            # Segment with tiny inner gap for separation
             ax_i.add_patch(FancyBboxPatch(
-                (bx, by), bw, bh,
-                boxstyle="square,pad=0",
+                (bx + 0.0018, by + 0.003), max(bw - 0.0036, 0.005), bh - 0.006,
+                boxstyle="round,pad=0,rounding_size=0.009",
                 facecolor=TIER_COLOR.get(t_name_g, "#888"),
-                edgecolor="none",
+                edgecolor="none", zorder=2,
             ))
-            if bw > 0.07:
+            if bw > 0.08:
                 ax_i.text(bx + bw / 2, by + bh / 2,
                           t_name_g[0], ha="center", va="center",
-                          fontsize=6.5, color="white", fontweight="bold")
+                          fontsize=6.5, color="white", fontweight="bold", zorder=3)
             bx += bw
 
     plt.savefig(ASSETS_DIR / "profile_card.svg",
@@ -252,9 +262,65 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
     print("  ✓ profile_card.svg")
 
 
-# ── Card 2: Rating history graph ────────────────────────────────────────────
+# ── Card 2: Language legend (horizontal, auto-wrapping) ─────────────────────
+def generate_lang_legend(lang_counts: dict):
+    langs = sorted(lang_counts.items(), key=lambda x: -x[1])
+    total = sum(v for _, v in langs)
+    n = len(langs)
+
+    ITEMS_PER_ROW = 4
+    n_rows = max(1, (n + ITEMS_PER_ROW - 1) // ITEMS_PER_ROW)
+
+    fig_w  = 9.0
+    fig_h  = n_rows * 0.88
+
+    # Bar: physical height H, width H/3  →  1:3 vertical ratio
+    bar_h_in = 0.34
+    bar_h    = bar_h_in / fig_h        # data units (ylim 0–1)
+    bar_w    = (bar_h_in / 3.0) / fig_w  # data units (xlim 0–1)
+
+    fig = plt.figure(figsize=(fig_w, fig_h), facecolor="none")
+    ax  = fig.add_axes([0.0, 0.0, 1.0, 1.0])
+    ax.set_facecolor("none")
+    ax.axis("off")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    for idx, (lang, count) in enumerate(langs):
+        row = idx // ITEMS_PER_ROW
+        col = idx % ITEMS_PER_ROW
+
+        cx = (col + 0.5) / ITEMS_PER_ROW
+        cy = 1.0 - (row + 0.5) / n_rows
+
+        pct        = count / total * 100
+        lang_color = LANG_COLOR.get(lang, LANG_COLOR["Other"])
+
+        # Thin vertical colored bar
+        bx = cx - 0.10
+        ax.add_patch(plt.Rectangle(
+            (bx, cy - bar_h / 2), bar_w, bar_h,
+            color=lang_color, zorder=5, linewidth=0,
+        ))
+
+        # Text: language name + percentage
+        tx = bx + bar_w + 0.020
+        ax.text(tx, cy + bar_h * 0.22, lang,
+                ha="left", va="center", fontsize=9.5, fontweight="bold",
+                color=C_TEXT, zorder=5)
+        ax.text(tx, cy - bar_h * 0.22, f"{pct:.1f}%",
+                ha="left", va="center", fontsize=7.5,
+                color=C_MUTED, zorder=5)
+
+    plt.savefig(ASSETS_DIR / "lang_legend.svg",
+                format="svg", bbox_inches="tight", transparent=True)
+    plt.close()
+    print("  ✓ lang_legend.svg")
+
+
+# ── Card 3: Rating history graph ─────────────────────────────────────────────
 def generate_rating_graph(history: list, user_data: dict):
-    fig = plt.figure(figsize=(11, 3.2), facecolor="none")
+    fig  = plt.figure(figsize=(13.2, 3.2), facecolor="none")
     ax   = fig.add_axes([0.06, 0.18, 0.72, 0.68])
     ax_r = fig.add_axes([0.81, 0.05, 0.18, 0.90])
 
@@ -267,7 +333,7 @@ def generate_rating_graph(history: list, user_data: dict):
 
     # ── Right info panel ──
     latest = history[-1] if history else user_data
-    ax_r.text(0.05, 0.92, "Rating",  fontsize=8,  color=C_MUTED)
+    ax_r.text(0.05, 0.92, "Rating", fontsize=8, color=C_MUTED)
     ax_r.text(0.05, 0.78, str(latest.get("rating", user_data["rating"])),
               fontsize=19, fontweight="bold", color=C_ACCENT)
     ax_r.text(0.05, 0.62, "Rank", fontsize=8, color=C_MUTED)
@@ -275,7 +341,7 @@ def generate_rating_graph(history: list, user_data: dict):
               fontsize=10, fontweight="bold", color=C_ACCENT)
 
     if len(history) >= 2:
-        prev = history[-2]
+        prev  = history[-2]
         delta = latest["rating"] - prev["rating"]
         dc = "#4CAF50" if delta > 0 else "#EF5350" if delta < 0 else C_MUTED
         ds = f"▲ +{delta}" if delta > 0 else f"▼ {delta}" if delta < 0 else "─ 0"
@@ -283,10 +349,10 @@ def generate_rating_graph(history: list, user_data: dict):
 
     # ── Line graph ──
     if len(history) >= 2:
-        dates   = [datetime.strptime(h["date"], "%Y-%m-%d") for h in history]
-        ratings = [h["rating"] for h in history]
-
+        dates     = [datetime.strptime(h["date"], "%Y-%m-%d") for h in history]
+        ratings   = [h["rating"] for h in history]
         date_nums = mdates.date2num(dates)
+
         if len(dates) >= 4:
             spl      = make_interp_spline(date_nums, ratings, k=3)
             x_smooth = np.linspace(date_nums[0], date_nums[-1], 300)
@@ -296,9 +362,11 @@ def generate_rating_graph(history: list, user_data: dict):
             ax.fill_between(mdates.num2date(x_smooth), y_smooth, min(ratings) - 5,
                             alpha=0.12, color=C_ACCENT, zorder=3)
         else:
-            ax.plot(dates, ratings, color=C_ACCENT, linewidth=2.2, zorder=5, solid_capstyle="round")
+            ax.plot(dates, ratings,
+                    color=C_ACCENT, linewidth=2.2, zorder=5, solid_capstyle="round")
             ax.fill_between(dates, ratings, min(ratings) - 5,
                             alpha=0.12, color=C_ACCENT, zorder=3)
+
         ax.scatter(dates, ratings, color=C_ACCENT, s=35, zorder=6,
                    edgecolors="white", linewidths=0.8)
 
@@ -313,7 +381,6 @@ def generate_rating_graph(history: list, user_data: dict):
         for spine in ("bottom", "left"):
             ax.spines[spine].set_color(C_LIGHT)
 
-        # Annotate latest point
         ax.annotate(
             str(ratings[-1]),
             xy=(dates[-1], ratings[-1]),
@@ -349,6 +416,7 @@ def main():
 
     print("Generating SVGs...")
     generate_profile_card(user_data, lang_counts, problem_stats)
+    generate_lang_legend(lang_counts)
     generate_rating_graph(history, user_data)
 
     print(f"\nDone — {user_data['handle']} · "
