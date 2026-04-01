@@ -237,7 +237,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
 
 # ── Card 2: Language legend (horizontal, auto-wrapping) ─────────────────────
-def generate_lang_legend(lang_counts: dict):
+def generate_lang_list(lang_counts: dict):
     langs = sorted(lang_counts.items(), key=lambda x: -x[1])
     total = sum(v for _, v in langs)
     n = len(langs)
@@ -245,8 +245,8 @@ def generate_lang_legend(lang_counts: dict):
     ITEMS_PER_ROW = 4
     n_rows = max(1, (n + ITEMS_PER_ROW - 1) // ITEMS_PER_ROW)
 
-    fig_w  = 9.0
-    fig_h  = n_rows * 0.38
+    fig_w  = 6.0
+    fig_h  = n_rows * 0.26
 
     # Bar: physical height H, width H/3  →  1:3 vertical ratio
     bar_h_in = 0.22
@@ -271,7 +271,7 @@ def generate_lang_legend(lang_counts: dict):
         lang_color = LANG_COLOR.get(lang, LANG_COLOR["Other"])
 
         # Thin vertical colored bar
-        bx = cx - 0.07
+        bx = cx - 0.055
         ax.add_patch(plt.Rectangle(
             (bx, cy - bar_h / 2), bar_w, bar_h,
             color=lang_color, zorder=5, linewidth=0,
@@ -286,10 +286,10 @@ def generate_lang_legend(lang_counts: dict):
                 ha="left", va="center", fontsize=7.5,
                 color=C_MUTED, zorder=5)
 
-    plt.savefig(ASSETS_DIR / "lang_legend.svg",
+    plt.savefig(ASSETS_DIR / "lang_list.svg",
                 format="svg", bbox_inches="tight", transparent=True)
     plt.close()
-    print("  ✓ lang_legend.svg")
+    print("  ✓ lang_list.svg")
 
 
 # ── Card 3: Rating history graph ─────────────────────────────────────────────
@@ -307,19 +307,19 @@ def generate_rating_graph(history: list, user_data: dict):
 
     # ── Right info panel ──
     latest = history[-1] if history else user_data
-    ax_r.text(0.05, 0.92, "Rating", fontsize=9.6, color=C_MUTED)
+    ax_r.text(0.05, 0.92, "Rating", fontsize=16, color=C_MUTED)
     ax_r.text(0.05, 0.78, str(latest.get("rating", user_data["rating"])),
-              fontsize=22.8, fontweight="bold", color=C_ACCENT)
-    ax_r.text(0.05, 0.62, "Rank", fontsize=9.6, color=C_MUTED)
+              fontsize=38, fontweight="bold", color=C_ACCENT)
+    ax_r.text(0.05, 0.62, "Rank", fontsize=16, color=C_MUTED)
     ax_r.text(0.05, 0.49, f"#{latest.get('rank', user_data['rank']):,}",
-              fontsize=12, fontweight="bold", color=C_ACCENT)
+              fontsize=20, fontweight="bold", color=C_ACCENT)
 
     if len(history) >= 2:
         prev  = history[-2]
         delta = latest["rating"] - prev["rating"]
         dc = "#4CAF50" if delta > 0 else "#EF5350" if delta < 0 else C_MUTED
         ds = f"▲ +{delta}" if delta > 0 else f"▼ {delta}" if delta < 0 else "─ 0"
-        ax_r.text(0.05, 0.36, ds, fontsize=9.6, color=dc, fontweight="bold")
+        ax_r.text(0.05, 0.36, ds, fontsize=16, color=dc, fontweight="bold")
 
     # ── Line graph ──
     if len(history) >= 2:
@@ -345,9 +345,9 @@ def generate_rating_graph(history: list, user_data: dict):
                    edgecolors="white", linewidths=0.8)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
-        ax.tick_params(axis="x", colors=C_MUTED, labelsize=8.4, rotation=30)
-        ax.tick_params(axis="y", colors=C_MUTED, labelsize=8.4)
-        ax.set_ylabel("Rating", fontsize=9, color=C_MUTED, labelpad=4)
+        ax.tick_params(axis="x", colors=C_MUTED, labelsize=14, rotation=30)
+        ax.tick_params(axis="y", colors=C_MUTED, labelsize=14)
+        ax.set_ylabel("Rating", fontsize=15, color=C_MUTED, labelpad=4)
         ax.grid(True, color=C_GRID, linewidth=0.6, linestyle="--", alpha=0.7)
 
         for spine in ("top", "right"):
@@ -359,15 +359,15 @@ def generate_rating_graph(history: list, user_data: dict):
             str(ratings[-1]),
             xy=(dates[-1], ratings[-1]),
             xytext=(6, 6), textcoords="offset points",
-            fontsize=9, color=C_ACCENT, fontweight="bold",
+            fontsize=18, color=C_ACCENT, fontweight="bold",
         )
     else:
         ax.axis("off")
         ax.text(0.5, 0.5, "Collecting data...\nCheck back soon!",
                 ha="center", va="center", transform=ax.transAxes,
-                fontsize=12, color=C_MUTED, linespacing=1.8)
+                fontsize=18, color=C_MUTED, linespacing=1.8)
 
-    ax.set_title("Rating History", fontsize=12, color=C_ACCENT,
+    ax.set_title("Rating History", fontsize=24, color=C_ACCENT,
                  pad=8, fontweight="bold", loc="left")
 
     plt.savefig(ASSETS_DIR / "rating_graph.svg",
@@ -390,7 +390,7 @@ def main():
 
     print("Generating SVGs...")
     generate_profile_card(user_data, lang_counts, problem_stats)
-    generate_lang_legend(lang_counts)
+    generate_lang_list(lang_counts)
     generate_rating_graph(history, user_data)
 
     print(f"\nDone — {user_data['handle']} · "
