@@ -176,13 +176,13 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
     # Handle (bigger)
     ax_i.text(0.04, 0.90, HANDLE,
-              fontsize=18, fontweight="bold", color=C_TEXT, va="center")
+              fontsize=25, fontweight="bold", color=C_TEXT, va="center")
 
     # Tier (right-aligned)
     t_color = tier_color(user_data["tier"])
     t_name  = tier_name(user_data["tier"])
     ax_i.text(0.96, 0.76, t_name,
-              fontsize=11, fontweight="bold", color=t_color,
+              fontsize=13, fontweight="bold", color=t_color,
               va="center", ha="right")
 
     # Stats rows
@@ -193,8 +193,8 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
     ]
     for i, (label, value) in enumerate(rows):
         y = 0.58 - i * 0.155
-        ax_i.text(0.04, y, label, fontsize=8, color=C_MUTED, va="center")
-        ax_i.text(0.96, y, value, fontsize=10.5, fontweight="bold",
+        ax_i.text(0.04, y, label, fontsize=9.6, color=C_MUTED, va="center")
+        ax_i.text(0.96, y, value, fontsize=12.6, fontweight="bold",
                   color=C_TEXT, va="center", ha="right")
         if i < len(rows) - 1:
             ax_i.plot([0.04, 0.96], [y - 0.075, y - 0.075],
@@ -208,7 +208,7 @@ def generate_profile_card(user_data: dict, lang_counts: dict, problem_stats: lis
 
     if active:
         total_s = sum(v for _, v in active)
-        ax_i.text(0.04, 0.120, "Difficulty", fontsize=7, color=C_MUTED, va="center")
+        ax_i.text(0.04, 0.120, "Difficulty", fontsize=8.4, color=C_MUTED, va="center")
 
         bx, by, bh = 0.04, 0.028, 0.072
 
@@ -245,7 +245,7 @@ def generate_lang_list(lang_counts: dict):
     ITEMS_PER_ROW = 4
     n_rows = max(1, (n + ITEMS_PER_ROW - 1) // ITEMS_PER_ROW)
 
-    fig_w  = 6.0
+    fig_w  = 4.8
     fig_h  = n_rows * 0.26
 
     # Bar: physical height H, width H/3  →  1:3 vertical ratio
@@ -280,10 +280,10 @@ def generate_lang_list(lang_counts: dict):
         # Text: language name + percentage
         tx = bx + bar_w + 0.020
         ax.text(tx, cy + bar_h * 0.22, lang,
-                ha="left", va="center", fontsize=9.5, fontweight="bold",
+                ha="left", va="center", fontsize=11.4, fontweight="bold",
                 color=C_TEXT, zorder=5)
         ax.text(tx, cy - bar_h * 0.22, f"{pct:.1f}%",
-                ha="left", va="center", fontsize=7.5,
+                ha="left", va="center", fontsize=9.0,
                 color=C_MUTED, zorder=5)
 
     plt.savefig(ASSETS_DIR / "lang_list.svg",
@@ -307,19 +307,19 @@ def generate_rating_graph(history: list, user_data: dict):
 
     # ── Right info panel ──
     latest = history[-1] if history else user_data
-    ax_r.text(0.05, 0.92, "Rating", fontsize=16, color=C_MUTED)
+    ax_r.text(0.05, 0.92, "Rating", fontsize=19, color=C_MUTED)
     ax_r.text(0.05, 0.78, str(latest.get("rating", user_data["rating"])),
-              fontsize=38, fontweight="bold", color=C_ACCENT)
-    ax_r.text(0.05, 0.62, "Rank", fontsize=16, color=C_MUTED)
+              fontsize=46, fontweight="bold", color=C_ACCENT)
+    ax_r.text(0.05, 0.62, "Rank", fontsize=19, color=C_MUTED)
     ax_r.text(0.05, 0.49, f"#{latest.get('rank', user_data['rank']):,}",
-              fontsize=20, fontweight="bold", color=C_ACCENT)
+              fontsize=24, fontweight="bold", color=C_ACCENT)
 
     if len(history) >= 2:
         prev  = history[-2]
         delta = latest["rating"] - prev["rating"]
         dc = "#4CAF50" if delta > 0 else "#EF5350" if delta < 0 else C_MUTED
         ds = f"▲ +{delta}" if delta > 0 else f"▼ {delta}" if delta < 0 else "─ 0"
-        ax_r.text(0.05, 0.36, ds, fontsize=16, color=dc, fontweight="bold")
+        ax_r.text(0.05, 0.36, ds, fontsize=19, color=dc, fontweight="bold")
 
     # ── Line graph ──
     if len(history) >= 2:
@@ -345,9 +345,9 @@ def generate_rating_graph(history: list, user_data: dict):
                    edgecolors="white", linewidths=0.8)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
-        ax.tick_params(axis="x", colors=C_MUTED, labelsize=14, rotation=30)
-        ax.tick_params(axis="y", colors=C_MUTED, labelsize=14)
-        ax.set_ylabel("Rating", fontsize=15, color=C_MUTED, labelpad=4)
+        ax.tick_params(axis="x", colors=C_MUTED, labelsize=17, rotation=30)
+        ax.tick_params(axis="y", colors=C_MUTED, labelsize=17)
+        ax.set_ylabel("Rating", fontsize=18, color=C_MUTED, labelpad=4)
         ax.grid(True, color=C_GRID, linewidth=0.6, linestyle="--", alpha=0.7)
 
         for spine in ("top", "right"):
@@ -359,15 +359,15 @@ def generate_rating_graph(history: list, user_data: dict):
             str(ratings[-1]),
             xy=(dates[-1], ratings[-1]),
             xytext=(6, 6), textcoords="offset points",
-            fontsize=18, color=C_ACCENT, fontweight="bold",
+            fontsize=22, color=C_ACCENT, fontweight="bold",
         )
     else:
         ax.axis("off")
         ax.text(0.5, 0.5, "Collecting data...\nCheck back soon!",
                 ha="center", va="center", transform=ax.transAxes,
-                fontsize=18, color=C_MUTED, linespacing=1.8)
+                fontsize=22, color=C_MUTED, linespacing=1.8)
 
-    ax.set_title("Rating History", fontsize=24, color=C_ACCENT,
+    ax.set_title("Rating History", fontsize=29, color=C_ACCENT,
                  pad=8, fontweight="bold", loc="left")
 
     plt.savefig(ASSETS_DIR / "rating_graph.svg",
