@@ -57,8 +57,14 @@ def tier_color(tier: int) -> str:
 
 # ── Language metadata ───────────────────────────────────────────────────────
 EXT_TO_LANG = {
+    # already tracked
     "cs": "C#", "py": "Python", "c": "C",
     "cpp": "C++", "java": "Java", "js": "JavaScript",
+    # additional
+    "kt": "Kotlin", "rb": "Ruby", "swift": "Swift",
+    "go": "Go", "rs": "Rust", "ts": "TypeScript",
+    "scala": "Scala", "php": "PHP", "hs": "Haskell",
+    "lua": "Lua", "pl": "Perl", "r": "R", "sh": "Bash",
 }
 LANG_COLOR = {
     "C#":         "#9B4F96",
@@ -67,6 +73,19 @@ LANG_COLOR = {
     "C++":        "#F34B7D",
     "Java":       "#B07219",
     "JavaScript": "#F1E05A",
+    "Kotlin":     "#A97BFF",
+    "Ruby":       "#701516",
+    "Swift":      "#F05138",
+    "Go":         "#00ADD8",
+    "Rust":       "#DEA584",
+    "TypeScript": "#3178C6",
+    "Scala":      "#C22D40",
+    "PHP":        "#4F5D95",
+    "Haskell":    "#5E5086",
+    "Lua":        "#000080",
+    "Perl":       "#0298C3",
+    "R":          "#198CE7",
+    "Bash":       "#89E051",
     "Other":      "#8A8A8A",
 }
 
