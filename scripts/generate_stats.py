@@ -280,10 +280,10 @@ def generate_lang_list(lang_counts: dict):
         # Text: language name + percentage
         tx = bx + bar_w + 0.020
         ax.text(tx, cy + bar_h * 0.22, lang,
-                ha="left", va="center", fontsize=11.4, fontweight="bold",
+                ha="left", va="center", fontsize=9.5, fontweight="bold",
                 color=C_TEXT, zorder=5)
         ax.text(tx, cy - bar_h * 0.22, f"{pct:.1f}%",
-                ha="left", va="center", fontsize=9.0,
+                ha="left", va="center", fontsize=7.5,
                 color=C_MUTED, zorder=5)
 
     plt.savefig(ASSETS_DIR / "lang_list.svg",
