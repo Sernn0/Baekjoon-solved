@@ -309,11 +309,6 @@ def generate_lang_list(lang_counts: dict):
                 ha="left", va="center", fontsize=9,
                 color=C_MUTED, zorder=5)
 
-    # Right-aligned total count to anchor visual right edge
-    ax.text(CONTENT_R, 0.5, f"{total} solved",
-            ha="right", va="center", fontsize=9,
-            color=C_MUTED, alpha=0.7, zorder=5)
-
     plt.savefig(ASSETS_DIR / "lang_list.svg",
                 format="svg", bbox_inches=None, pad_inches=0, transparent=True)
     plt.close()
