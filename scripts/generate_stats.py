@@ -29,7 +29,9 @@ BAEKJOON_DIR = REPO_ROOT / "백준"
 
 ASSETS_DIR.mkdir(exist_ok=True)
 
-CANVAS_W = 9.6   # shared figure width — keeps all three SVGs at the same scale
+CANVAS_W  = 9.6   # shared figure width — keeps all three SVGs at the same scale
+CONTENT_L = 0.08  # left content margin (fraction of figure width)
+CONTENT_R = 0.98  # right content margin
 
 # ── solved.ac tier metadata ─────────────────────────────────────────────────
 _TIER_NAMES = (
@@ -263,8 +265,9 @@ def generate_lang_list(lang_counts: dict):
     total = sum(v for _, v in langs)
     n = len(langs)
 
-    ITEMS_PER_ROW = 4
+    ITEMS_PER_ROW = min(4, n)
     n_rows = max(1, (n + ITEMS_PER_ROW - 1) // ITEMS_PER_ROW)
+    col_w  = (CONTENT_R - CONTENT_L) / ITEMS_PER_ROW
 
     fig_w  = CANVAS_W
     fig_h  = n_rows * 0.70
@@ -285,7 +288,7 @@ def generate_lang_list(lang_counts: dict):
         row = idx // ITEMS_PER_ROW
         col = idx % ITEMS_PER_ROW
 
-        bx = 0.08 + col * 0.23
+        bx = CONTENT_L + col * col_w
         cy = 1.0 - (row + 0.5) / n_rows
 
         pct        = count / total * 100
@@ -343,16 +346,18 @@ def generate_rating_graph(history: list, user_data: dict):
 
     # ── Line graph ──
     if len(history) >= 2:
-        # Build 7-day padded window: missing dates filled with earliest known rating
+        GRAPH_DAYS = 30
         latest_dt    = datetime.strptime(history[-1]["date"], "%Y-%m-%d")
-        window_start = latest_dt - timedelta(days=6)
-        hist_dict    = {h["date"]: h["rating"] for h in history}
-        earliest_rating = history[0]["rating"]
+        first_dt     = datetime.strptime(history[0]["date"], "%Y-%m-%d")
+        window_start = max(first_dt, latest_dt - timedelta(days=GRAPH_DAYS - 1))
+        window_days  = (latest_dt - window_start).days + 1
 
+        # Forward-fill: missing dates inherit previous day's rating
+        hist_dict = {h["date"]: h["rating"] for h in history}
         disp_dates, disp_ratings = [], []
-        last_known = earliest_rating
-        for i in range(7):
-            d = window_start + timedelta(days=i)
+        last_known = history[0]["rating"]
+        for i in range(window_days):
+            d   = window_start + timedelta(days=i)
             key = d.strftime("%Y-%m-%d")
             if key in hist_dict:
                 last_known = hist_dict[key]
@@ -369,11 +374,14 @@ def generate_rating_graph(history: list, user_data: dict):
                 color=C_ACCENT, linewidth=1.2, zorder=5, solid_capstyle="round")
         ax.fill_between(mdates.num2date(x_smooth), y_smooth, min(disp_ratings) - 5,
                         alpha=0.12, color=C_ACCENT, zorder=3)
-        ax.scatter(disp_dates, disp_ratings, color=C_ACCENT, s=11, zorder=6,
-                   edgecolors="white", linewidths=0.5)
 
-        ax.set_xlim(window_start, latest_dt + timedelta(hours=12))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+        # Only mark the latest data point
+        ax.scatter([disp_dates[-1]], [disp_ratings[-1]], color=C_ACCENT, s=20, zorder=6,
+                   edgecolors="white", linewidths=0.8)
+
+        ax.set_xlim(window_start - timedelta(hours=12), latest_dt + timedelta(hours=12))
+        tick_interval = max(1, window_days // 7)
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=tick_interval))
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
         ax.tick_params(axis="x", colors=C_MUTED, labelsize=10, rotation=30)
         ax.tick_params(axis="y", colors=C_MUTED, labelsize=10)
@@ -385,11 +393,9 @@ def generate_rating_graph(history: list, user_data: dict):
         for spine in ("bottom", "left"):
             ax.spines[spine].set_color(C_LIGHT)
 
-        real_dates   = [datetime.strptime(h["date"], "%Y-%m-%d") for h in history]
-        real_ratings = [h["rating"] for h in history]
         ax.annotate(
-            str(real_ratings[-1]),
-            xy=(real_dates[-1], real_ratings[-1]),
+            str(disp_ratings[-1]),
+            xy=(disp_dates[-1], disp_ratings[-1]),
             xytext=(3, 3), textcoords="offset points",
             fontsize=12, color=C_ACCENT, fontweight="bold",
         )

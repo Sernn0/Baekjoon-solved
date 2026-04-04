@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, master]
   workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * *'   # KST 00:00 매일 자동 갱신
 
 jobs:
   update-stats:
