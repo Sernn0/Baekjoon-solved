@@ -309,6 +309,11 @@ def generate_lang_list(lang_counts: dict):
                 ha="left", va="center", fontsize=9,
                 color=C_MUTED, zorder=5)
 
+    # Right-aligned total count to anchor visual right edge
+    ax.text(CONTENT_R, 0.5, f"{total} solved",
+            ha="right", va="center", fontsize=9,
+            color=C_MUTED, alpha=0.7, zorder=5)
+
     plt.savefig(ASSETS_DIR / "lang_list.svg",
                 format="svg", bbox_inches=None, pad_inches=0, transparent=True)
     plt.close()
@@ -372,7 +377,8 @@ def generate_rating_graph(history: list, user_data: dict):
 
         ax.plot(mdates.num2date(x_smooth), y_smooth,
                 color=C_ACCENT, linewidth=1.2, zorder=5, solid_capstyle="round")
-        ax.fill_between(mdates.num2date(x_smooth), y_smooth, min(disp_ratings) - 5,
+        y_floor = min(disp_ratings) - 5
+        ax.fill_between(mdates.num2date(x_smooth), y_smooth, y_floor,
                         alpha=0.12, color=C_ACCENT, zorder=3)
 
         # Only mark the latest data point
@@ -380,6 +386,7 @@ def generate_rating_graph(history: list, user_data: dict):
                    edgecolors="white", linewidths=0.8)
 
         ax.set_xlim(window_start - timedelta(hours=12), latest_dt + timedelta(hours=12))
+        ax.set_ylim(bottom=y_floor)
         tick_interval = max(1, window_days // 7)
         ax.xaxis.set_major_locator(mdates.DayLocator(interval=tick_interval))
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
