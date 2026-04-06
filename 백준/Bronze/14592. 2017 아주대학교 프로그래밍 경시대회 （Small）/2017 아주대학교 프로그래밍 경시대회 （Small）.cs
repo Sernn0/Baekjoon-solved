@@ -1,5 +1,3 @@
-using System.Net;
-
 int N = int.Parse(Console.ReadLine());
 int[,] info = new int[N, 3];
 
