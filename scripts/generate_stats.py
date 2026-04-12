@@ -112,10 +112,15 @@ TIER_GROUP_BOUNDS = {
 }
 
 # ── API helpers ─────────────────────────────────────────────────────────────
+_HEADERS = {
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (compatible; baekjoon-stats-bot/1.0)",
+}
+
 def fetch_user_data() -> dict:
     r = requests.get(
         f"https://solved.ac/api/v3/user/show?handle={HANDLE}",
-        headers={"Content-Type": "application/json"},
+        headers=_HEADERS,
         timeout=10,
     )
     r.raise_for_status()
@@ -124,7 +129,7 @@ def fetch_user_data() -> dict:
 def fetch_problem_stats() -> list:
     r = requests.get(
         f"https://solved.ac/api/v3/user/problem_stats?handle={HANDLE}",
-        headers={"Content-Type": "application/json"},
+        headers=_HEADERS,
         timeout=10,
     )
     r.raise_for_status()
